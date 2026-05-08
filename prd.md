@@ -584,7 +584,105 @@ CREATE INDEX idx_task_schedules_active ON task_schedules(is_active, next_run_at)
 | Agent 任务完成时间（P95） | < 5 分钟 |
 | 系统可用性（SLA） | > 99.5% |
 | 爬虫单次执行时间 | < 30 秒 |
-| LLM 日报生成时间 | < 60 秒 |
+|| LLM 日报生成时间 | < 60 秒 |
+|
+
+---
+
+## 14. 评估数据来源与 PM 自测用例
+
+### 评估数据来源
+
+本项目评估数据来源如下：
+
+| 数据来源 | 内容 | 数量 |
+|---------|------|------|
+| 历史运营数据 | 过去 3 个月的竞品价格记录、广告投放数据、日报模板 | 约 2,000 条 |
+| Agent 路由测试集 | 标注了"应该路由到哪个子图"的运营指令 | 100 条 |
+| 竞品价格 ground truth | 人工标注的"这条价格监测是否准确" | 200 条 |
+| 日报生成 ground truth | 人工编写的"标准日报"作为对比参考 | 50 条 |
+
+**标注方式**：由 2 位运营人员分别标注，取交集作为 ground truth。争议项讨论决定。
+
+### PM 自测用例（10 条）
+
+以下测试用例由 AI 产品经理编写，覆盖办公自动化的常见运营场景。
+
+```python
+test_cases = [
+    # 场景1：竞品价格监测
+    {"input": "帮我查一下竞争对手A今天对主推款的价格是多少",
+     "expected_agent": "price_monitor",
+     "expected_elements": ["价格数据", "对比上期"]},
+    # 场景2：日报生成
+    {"input": "帮我生成昨天的运营日报",
+     "expected_agent": "daily_report",
+     "expected_elements": ["销售数据", "竞品动态", "广告表现"]},
+    # 场景3：广告活动创建
+    {"input": "在Google Ads上创建一个新的夏季促销活动，预算500美元",
+     "expected_agent": "ad_campaign",
+     "expected_elements": ["Google Ads", "预算$500", "夏季促销"]},
+    # 场景4：异常告警
+    {"input": "为什么昨天销量突然降了30%？帮我查一下原因",
+     "expected_agent": "anomaly_detect",
+     "expected_elements": ["销量分析", "原因排查"]},
+    # 场景5：多任务混合
+    {"input": "先看看竞品A的价格，再帮我生成昨天的日报",
+     "expected_agent": "orchestrator",
+     "expected_elements": ["price_monitor执行", "daily_report执行"]},
+    # 场景6：定时任务设置
+    {"input": "每天早上9点自动抓取竞品价格，发到群里",
+     "expected_agent": "task_scheduler",
+     "expected_elements": ["定时任务", "9:00", "推送"]},
+    # 场景7（边界）：模糊指令
+    {"input": "帮我看看", "expected_agent": "clarification",
+     "expected_elements": ["追问具体需求"]},
+    # 场景8（边界）：超出能力范围
+    {"input": "帮我设计一个夏季新款婚纱",
+     "expected_agent": "fallback",
+     "expected_elements": ["无法处理", "转人工"]},
+    # 场景9（边界）：英文混合
+    {"input": "Check my Google Ads performance from yesterday",
+     "expected_agent": "ad_campaign",
+     "expected_elements": ["广告表现", "英语或双语"]},
+    # 场景10（边界）：数据不存在
+    {"input": "帮我查一下三个月前的竞品价格对比",
+     "expected_agent": "price_monitor",
+     "expected_elements": ["数据不存在", "建议保留更长时间"]},
+]
+```
+
+**通过标准**：
+- `expected_agent` 匹配：Agent 路由正确
+- `expected_elements` 覆盖：回答包含所有要素
+- 10 条全部通过后进入正式评估
+
+### ROI 计算
+
+**成本**
+
+| 项目 | 金额 | 说明 |
+|------|------|------|
+| 开发（2工程师 × 3个月） | $48,000 | 含多Agent系统、前端、接口对接 |
+| 数据标注 | $2,000 | 100条路由 + 200条价格 ground truth |
+| **一次性总开发成本** | **$50,000** | 分摊至3年 ≈ $16,667/年 |
+| API 调用（DeepSeek-V3） | $100/月 | 日均 2,000 次Agent调用 |
+| 服务器（1台） | $80/月 | |
+| 工程师维护（0.5人） | $25,000/年 | |
+
+**收益**
+
+| 来源 | 金额 | 说明 |
+|------|------|------|
+| 人力节省（替代 3 个运营岗） | $126,000/年 | $3,500/月 × 3人 × 12月 |
+| 错误减少（价格监测失误、广告浪费） | $50,000/年 | 保守估算 |
+| **年总收益** | **$176,000** | |
+| **年总成本** | **$43,381** | 开发分摊 $16,667 + API $1,200 + 服务器 $960 + 维护 $25,000 |
+
+**ROI = ($176,000 - $43,381) / $43,381 = 306%**
+**回本周期：约 4 个月**
+
+---
 
 ## 13. 与研发协作说明
 
