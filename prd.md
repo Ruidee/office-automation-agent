@@ -3,7 +3,7 @@
 ## 1. 产品概述
 
 ### 产品名称
-**Azazie Office Automation Agent**（内部代号：AOA）
+**Office Automation Agent**（内部代号：AOA）
 
 ### 定位一句话
 面向跨境电商企业的 AI Agent 办公流程自动化平台，用多 Agent 协作替代重复性人工运营操作。
@@ -291,7 +291,7 @@
 #### Dashboard 首页
 ```
 +--------------------------------------------------------------+
-|  Azazie Automation  [Dashboard] [Pricing] [Reports] [Tasks]  |
+|  OA Automation  [Dashboard] [Pricing] [Reports] [Tasks]  |
 +--------------------------------------------------------------+
 |                                                               |
 |  +--------+ +--------+ +--------+ +--------+                  |
